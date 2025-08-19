@@ -23,7 +23,7 @@ let
         // {
           # Save our sources for each port
           sources = acc.sources or { } // {
-            ${port} = self.fetchCatppuccinPort {
+            ${port} = self.patchCatppuccinPort {
               inherit
                 port
                 rev
