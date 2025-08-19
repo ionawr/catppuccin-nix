@@ -21,7 +21,7 @@ let
         }:
         lib.recursiveUpdate acc {
           # Save our sources for each port
-          sources.${port} = self.fetchCatppuccinPort {
+          sources.${port} = self.patchCatppuccinPort {
             inherit
               port
               rev
