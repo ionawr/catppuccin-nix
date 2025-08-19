@@ -20,7 +20,7 @@ let
         }:
         lib.recursiveUpdate acc {
           # Save our sources for each port
-          sources.${port} = catppuccinPackages.fetchCatppuccinPort { inherit port rev hash; };
+          sources.${port} = catppuccinPackages.patchCatppuccinPort { inherit port rev hash; };
 
           # And create a default package for them
           "${port}" = catppuccinPackages.buildCatppuccinPort { inherit port lastModified; };
