@@ -10,6 +10,10 @@
 }: let
   pristine = fetchCatppuccinPort {inherit port rev hash;};
 
+  skipPatch = [
+    "firefox"
+  ];
+
   replacementTable =
     [
       ["cdd6f4" "f4f4f4"] # text
@@ -40,11 +44,14 @@
     (map (p: "-e ${lib.escapeShellArg (builtins.elemAt p 0)}")
       replacementTable);
 in
-  pkgs.runCommandLocal "catppuccin-${port}-patched" {src = pristine;} ''
-    cp -r --no-preserve=mode,ownership --dereference "$src/." "$out"
+  if builtins.elem port skipPatch
+  then pristine
+  else
+    pkgs.runCommandLocal "catppuccin-${port}-patched" {src = pristine;} ''
+      cp -r --no-preserve=mode,ownership --dereference "$src/." "$out"
 
-    grep -IlR --null ${grepFlags} "$out" | \
-      while IFS= read -r -d $'\0' f; do
-        substituteInPlace "$f" ${replaceArgs}
-      done
-  ''
+      grep -IlR --null ${grepFlags} "$out" | \
+        while IFS= read -r -d $'\0' f; do
+          substituteInPlace "$f" ${replaceArgs}
+        done
+    ''
