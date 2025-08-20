@@ -48,6 +48,7 @@ lib.makeExtensible (ctp: {
       "sky"
       "teal"
       "yellow"
+      "text"
     ];
   };
 
