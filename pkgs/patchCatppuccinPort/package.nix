@@ -28,6 +28,8 @@
       ["1e1e2e" "161616"] # base
       ["181825" "0b0b0b"] # mantle
       ["11111b" "000000"] # crust
+
+      ["f5e0dc" "f4f4f4"] # rosewater -> text for monochromatic theme
     ]
     ++ extraSubstitutions;
 
