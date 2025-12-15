@@ -2,7 +2,7 @@
   lib,
   stdenv,
   buildPackages,
-  fetchCatppuccinPort,
+  patchCatppuccinPort,
   installShellFiles,
   nix-update-script,
   rustPlatform,
@@ -12,7 +12,7 @@ rustPlatform.buildRustPackage rec {
   pname = "catwalk";
   version = "1.3.2";
 
-  src = fetchCatppuccinPort {
+  src = patchCatppuccinPort {
     port = "catwalk";
     rev = "refs/tags/v${version}";
     hash = "sha256-Yj9xTQJ0eu3Ymi2R9fgYwBJO0V+4bN4MOxXCJGQ8NjU=";
