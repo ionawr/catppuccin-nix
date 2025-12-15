@@ -27,7 +27,7 @@ in
 
     accent = lib.mkOption {
       type = catppuccinLib.types.accent;
-      default = "mauve";
+      default = "monochrome";
       description = "Global Catppuccin accent";
     };
 
