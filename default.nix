@@ -6,6 +6,7 @@
   },
   lib ? pkgs.lib,
   system ? builtins.currentSystem,
+  palette,
 }:
 
 let
@@ -21,11 +22,12 @@ let
         }:
         lib.recursiveUpdate acc {
           # Save our sources for each port
-          sources.${port} = self.patchCatppuccinPort {
+          sources.${port} = catppuccinPackages.patchCatppuccinPort {
             inherit
               port
               rev
               hash
+              palette
               lastModified
               ;
           };
@@ -35,13 +37,23 @@ let
         }
       ) { } (lib.importJSON ./pkgs/sources.json);
 
+      paletteNpm = palette.packages.${pkgs.stdenv.hostPlatform.system}.npm;
+
       collected = lib.packagesFromDirectoryRecursive {
-        inherit (self) callPackage;
+        callPackage = lib.callPackageWith (pkgs // catppuccinPackages // { inherit paletteNpm; });
         directory = ./pkgs;
       };
     in
-    generated // collected
-  );
+    generated
+    // collected
+    // {
+      sources = generated.sources // {
+        palette = pkgs.runCommand "catppuccin-palette-source" { } ''
+          mkdir -p $out
+          cp ${palette.packages.${pkgs.stdenv.hostPlatform.system}.json} $out/palette.json
+        '';
+      };
+    };
 in
 
 {

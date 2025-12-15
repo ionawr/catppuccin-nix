@@ -3,10 +3,14 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    palette = {
+      url = "github:kansedari/catppuccin-palette";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    { self, nixpkgs }:
+    { self, nixpkgs, palette }:
 
     let
       inherit (nixpkgs) lib;
@@ -47,7 +51,7 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          catppuccinPackages = (import ./default.nix { inherit pkgs; }).packages;
+          catppuccinPackages = (import ./default.nix { inherit pkgs palette; }).packages;
         in
         catppuccinPackages
         // {
