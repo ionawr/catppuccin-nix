@@ -4,39 +4,39 @@ index a4b6e93..42c1824 100644
 +++ b/main.js
 @@ -1,5 +1,6 @@
  import JsonUrl from "json-url";
- import { variants } from "./catppuccin-palette.js";
+ import { variants } from "@catppuccin/palette";
 +import { writeFileSync } from "node:fs";
- 
+
  const accents = [
      "rosewater",
-@@ -37,6 +38,8 @@ const capitalize = (s) => {
+@@ -37,6 +38,8 @@
  };
- 
+
  (async () => {
 +    let themes = {};
 +
      for (const flavour of Object.keys(variants)) {
          console.log(`<details>\n<summary>${capitalize(flavour)}</summary>\n`);
          const lib = {};
-@@ -51,6 +54,8 @@ const capitalize = (s) => {
+@@ -51,6 +54,8 @@
              };
          });
- 
+
 +        themes[flavour] = {};
 +
          for (const accent of accents) {
              lib.accent = lib[accent];
- 
-@@ -99,6 +104,8 @@ const capitalize = (s) => {
+
+@@ -99,6 +104,8 @@
                  title: `Catppuccin ${flavour} ${accent}`,
              };
- 
+
 +            themes[flavour][accent] = theme;
 +
              const url = await jsonCodec.compress(theme);
              const link = `<a href="https://color.firefox.com/?theme=${url}">${capitalize(
                  accent
-@@ -108,4 +115,6 @@ const capitalize = (s) => {
+@@ -108,4 +115,6 @@
          }
          console.log(`</details>`);
      }
