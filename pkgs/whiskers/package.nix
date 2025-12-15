@@ -1,6 +1,6 @@
 {
   lib,
-  fetchCatppuccinPort,
+  patchCatppuccinPort,
   nix-update-script,
   rustPlatform,
 }:
@@ -9,7 +9,7 @@ rustPlatform.buildRustPackage rec {
   pname = "whiskers";
   version = "2.5.1";
 
-  src = fetchCatppuccinPort {
+  src = patchCatppuccinPort {
     port = "whiskers";
     rev = "refs/tags/v${version}";
     hash = "sha256-OLEXy9MCrPQu1KWICsYhe/ayVqxkYIFwyJoJhgiNDz4=";

@@ -1,11 +1,12 @@
 {
   lib,
   vscode-utils,
-  fetchCatppuccinPort,
+  patchCatppuccinPort,
   nodejs,
   pnpm,
   pnpmConfigHook,
   fetchPnpmDeps,
+  catppuccinPaletteHook,
 
   catppuccinOptions ? { },
 }:
@@ -15,7 +16,7 @@ vscode-utils.buildVscodeExtension (finalAttrs: {
   name = finalAttrs.pname;
   version = "3.18.0";
 
-  src = fetchCatppuccinPort {
+  src = patchCatppuccinPort {
     port = "vscode";
     rev = "refs/tags/@catppuccin/vscode-v${finalAttrs.version}";
     hash = "sha256-vi+QNploStQFrXSc+izcycKtpkrRsq2mJWrKsHP3D5g=";
@@ -43,6 +44,7 @@ vscode-utils.buildVscodeExtension (finalAttrs: {
     nodejs
     pnpm
     pnpmConfigHook
+    catppuccinPaletteHook
   ];
 
   env = lib.optionalAttrs (catppuccinOptions != { }) {
