@@ -6,6 +6,7 @@
   },
   lib ? pkgs.lib,
   system ? builtins.currentSystem,
+  palette,
 }:
 
 let
@@ -28,6 +29,7 @@ let
                 port
                 rev
                 hash
+                palette
                 lastModified
                 ;
             };
@@ -38,13 +40,23 @@ let
         }
       ) { } (lib.importJSON ./pkgs/sources.json);
 
+      paletteNpm = palette.packages.${pkgs.stdenv.hostPlatform.system}.npm;
+
       collected = lib.packagesFromDirectoryRecursive {
-        inherit (self) callPackage;
+        callPackage = lib.callPackageWith (pkgs // catppuccinPackages // { inherit paletteNpm; });
         directory = ./pkgs;
       };
     in
-    generated // collected
-  );
+    generated
+    // collected
+    // {
+      sources = generated.sources // {
+        palette = pkgs.runCommand "catppuccin-palette-source" { } ''
+          mkdir -p $out
+          cp ${palette.packages.${pkgs.stdenv.hostPlatform.system}.json} $out/palette.json
+        '';
+      };
+    };
 in
 
 {

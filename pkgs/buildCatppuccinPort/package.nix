@@ -3,7 +3,7 @@
   stdenvNoCC,
   catppuccinInstallHook,
   catppuccinBuildHook,
-  fetchCatppuccinPort,
+  patchCatppuccinPort,
   whiskers,
   sources,
 }:
@@ -23,7 +23,7 @@ lib.extendMkDerivation {
           or ("0" + lib.optionalString (lastModified != null) "-unstable-${toString lastModified}");
 
       src =
-        args.src or sources.${finalAttrs.port} or (fetchCatppuccinPort {
+        args.src or sources.${finalAttrs.port} or (patchCatppuccinPort {
           inherit (finalAttrs) port;
           inherit (finalAttrs) rev hash;
           fetchSubmodules = finalAttrs.fetchSubmodules or false;
