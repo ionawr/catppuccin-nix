@@ -46,8 +46,7 @@ LATTE_REPLACEMENTS: tuple[Replacement, ...] = (
 
 
 @dataclass(frozen=True)
-class Flavor:
-    """Per-flavor configuration for variant generation and renaming."""
+class Flavour:
     name: str
     target: str
     rosewater_hex: str
@@ -62,9 +61,9 @@ class Flavor:
         return self.target.capitalize()
 
 
-FLAVORS: tuple[Flavor, ...] = (
-    Flavor(name="mocha", target="dark", rosewater_hex="f5e0dc", monochrome_hex="f4f4f4"),
-    Flavor(name="latte", target="light", rosewater_hex="dc8a78", monochrome_hex="0b0b0b"),
+FLAVOURS: tuple[Flavour, ...] = (
+    Flavour(name="mocha", target="dark", rosewater_hex="f5e0dc", monochrome_hex="f4f4f4"),
+    Flavour(name="latte", target="light", rosewater_hex="dc8a78", monochrome_hex="0b0b0b"),
 )
 
 
@@ -100,9 +99,8 @@ def _case_preserving_replace(match: re.Match, mapping: dict[str, str]) -> str:
 
 
 def _should_skip_file(file_path: Path) -> bool:
-    """Skip files that shouldn't be patched (lock files, package manifests, etc.)."""
     name = file_path.name.lower()
-    return "package" in name or "lock" in name
+    return "package" in name or "Cargo" in name or "lock" in name
 
 
 def replace_in_files(root: Path, replacements: Sequence[Replacement]) -> None:
@@ -184,14 +182,14 @@ def remove_items(root: Path, patterns: Sequence[str]) -> None:
             continue
 
 
-def _rosewater_to_monochrome_pattern(flavor: Flavor) -> re.Pattern:
+def _rosewater_to_monochrome_pattern(flavor: Flavour) -> re.Pattern:
     return re.compile(
         rf"{re.escape(flavor.rosewater_hex)}|rosewater|Rosewater",
         re.IGNORECASE,
     )
 
 
-def _rosewater_to_monochrome_replacer(flavor: Flavor) -> Callable[[re.Match], str]:
+def _rosewater_to_monochrome_replacer(flavor: Flavour) -> Callable[[re.Match], str]:
     def repl(match: re.Match) -> str:
         token = match.group(0)
         if token.lower() == flavor.rosewater_hex.lower():
@@ -216,7 +214,7 @@ def _patch_tree_text(root: Path, pattern: re.Pattern, repl: Callable[[re.Match],
 
 
 def create_monochrome_variants(root: Path) -> None:
-    for flavor in FLAVORS:
+    for flavor in FLAVOURS:
         content_pattern = _rosewater_to_monochrome_pattern(flavor)
         content_replacer = _rosewater_to_monochrome_replacer(flavor)
 
@@ -268,7 +266,7 @@ def create_monochrome_variants(root: Path) -> None:
 
 
 def rename_flavors(root: Path) -> None:
-    for flavor in FLAVORS:
+    for flavor in FLAVOURS:
         rename_dirs(root, from_str=flavor.name, to_str=flavor.target)
         rename_files(root, from_str=flavor.name, to_str=flavor.target)
 
@@ -288,33 +286,38 @@ def rename_flavors(root: Path) -> None:
 
         _patch_tree_text(root, pattern, repl)
 
-def _has_palette_dependency(root: Path) -> bool:
-    """Check if any lock file references @catppuccin/palette."""
-    for lock_file in ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"]:
-        lock_path = root / lock_file
-        if lock_path.exists():
-            content = _read_text(lock_path)
-            if content and "@catppuccin/palette" in content:
-                return True
-    return False
+def inject_palette_to_js_ports(root: Path, palette_path: Path) -> None:
+    def _has_palette_dependency(root: Path) -> bool:
+        """Check if any lock file references @catppuccin/palette."""
+        for lock_file in ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"]:
+            lock_path = root / lock_file
+            if lock_path.exists():
+                content = _read_text(lock_path)
+                if content and "@catppuccin/palette" in content:
+                    return True
+        return False
 
-
-def inject_palette(root: Path, palette_path: Path) -> None:
-    """Copy custom palette to source for JS-based ports."""
     if not _has_palette_dependency(root):
         return
 
-    # Copy palette to source (will be used by catppuccinPaletteHook after npm install)
+    # copy palette to source (will be used by catppuccinPatchHook after npm install)
     dest = root / ".catppuccin-palette"
     shutil.copytree(palette_path, dest)
 
 
+def inject_crate_to_rust_ports(root: Path, crate_path: Path) -> None:
+    # Rust crate replacement is handled by catppuccinPatchHook at build time.
+    # This function is kept for potential future use but currently does nothing.
+    pass
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Patch Catppuccin port themes for dark/light naming"
+        description="Patch Catppuccin port themes"
     )
     parser.add_argument("out_dir", type=Path, help="Output directory to patch")
     parser.add_argument("--palette", type=Path, help="Path to custom palette npm package")
+    parser.add_argument("--rust-crate", type=Path, help="Path to custom catppuccin Rust crate")
 
     return parser.parse_args(argv)
 
@@ -335,7 +338,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     remove_items(out_dir, ["*frappe*", "*macchiato*"])
 
     if args.palette:
-        inject_palette(out_dir, args.palette)
+        inject_palette_to_js_ports(out_dir, args.palette)
+
+    if args.rust_crate:
+        inject_crate_to_rust_ports(out_dir, args.rust_crate)
 
     return 0
 
