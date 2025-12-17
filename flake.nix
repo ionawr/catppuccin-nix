@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
     palette = {
       url = "github:kansedari/catppuccin-palette";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -41,6 +42,8 @@
           _file = "${self.outPath}/flake.nix#${type}Modules.${name}";
 
           imports = [ file ];
+
+          _module.args.palette = palette;
 
           catppuccin.sources = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system};
         };
