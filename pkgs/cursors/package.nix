@@ -44,7 +44,10 @@ in
 buildCatppuccinPort (finalAttrs: {
   port = "cursors";
 
-  postPatch = "patchShebangs scripts/ build";
+  postPatch = ''
+    chmod +x build
+    patchShebangs scripts/ build
+  '';
 
   # dummy "out" output to prevent breakage
   outputs = variants ++ [ "out" ];
