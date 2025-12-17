@@ -5,7 +5,6 @@ let
   inherit (config.catppuccin) sources;
 
   cfg = config.catppuccin.newsboat;
-  theme = if cfg.flavor == "latte" then "latte" else "dark";
 in
 
 {
@@ -13,7 +12,7 @@ in
 
   config = lib.mkIf cfg.enable {
     programs.newsboat = {
-      extraConfig = lib.fileContents "${sources.newsboat}/${theme}";
+      extraConfig = lib.fileContents "${sources.newsboat}/${cfg.flavor}";
     };
   };
 }
