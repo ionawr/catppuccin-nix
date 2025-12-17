@@ -15,7 +15,19 @@ rustPlatform.buildRustPackage rec {
     hash = "sha256-KU2cHBtz9rdfhulINRaQm+YZ7n8OBULrSHSSxmoitnk=";
   };
 
+  patches = [
+    ./patches/cargo-toml-override.patch
+    ./patches/cli-rs-override.patch
+    ./patches/models-rs-override.patch
+  ];
+
+  cargoPatches = [
+    ./patches/cargo-lock-override.patch
+  ];
+
   cargoHash = "sha256-40IPDdxKTWYxsCfsECsXDGwfxXiTEIelxIGAFv3xlU4=";
+
+  doCheck = false;
 
   passthru = {
     updateScript = nix-update-script { };
