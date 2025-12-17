@@ -42,6 +42,8 @@
 
           imports = [ file ];
 
+          _module.args.palette = palette;
+
           catppuccin.sources = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system};
         };
     in
