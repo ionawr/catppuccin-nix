@@ -218,7 +218,7 @@ def create_monochrome_variants(root: Path) -> None:
         content_pattern = _rosewater_to_monochrome_pattern(flavor)
         content_replacer = _rosewater_to_monochrome_replacer(flavor)
 
-        # dir: ...-{flavor}-rosewater -> ...-{flavor}-monochrome
+        # ...-{flavor}-rosewater -> ...-{flavor}-monochrome
         dir_suffix = re.compile(rf"-{re.escape(flavor.name)}-rosewater$", re.IGNORECASE)
         for src_dir in list(root.rglob(f"*-{flavor.name}-rosewater")):
             if not src_dir.is_dir():
@@ -232,7 +232,7 @@ def create_monochrome_variants(root: Path) -> None:
 
             shutil.copytree(src_dir, dest_dir)
 
-            # file name: rosewater -> monochrome
+            # rosewater -> monochrome
             for file_path in list(dest_dir.rglob("*rosewater*")):
                 if file_path.is_file():
                     file_path.rename(
@@ -241,7 +241,7 @@ def create_monochrome_variants(root: Path) -> None:
 
             _patch_tree_text(dest_dir, content_pattern, content_replacer)
 
-        # file content: *-{flavor}-rosewater.* -> *-{flavor}-monochrome.*
+        # *-{flavor}-rosewater.* -> *-{flavor}-monochrome.*
         file_name_re = re.compile(
             rf"^(.*-{re.escape(flavor.name)})-rosewater(\..+)$", re.IGNORECASE
         )
@@ -263,6 +263,22 @@ def create_monochrome_variants(root: Path) -> None:
             if content is None:
                 continue
             _write_text(dest_file, content_pattern.sub(content_replacer, content))
+
+        # {flavor}/rosewater.* -> {flavor}/monochrome.*
+        for flavor_dir in root.rglob(flavor.name):
+            if not flavor_dir.is_dir():
+                continue
+            for src_file in list(flavor_dir.glob("rosewater.*")):
+                if not src_file.is_file():
+                    continue
+                dest_file = src_file.with_name(src_file.name.replace("rosewater", "monochrome"))
+                if dest_file.exists():
+                    continue
+                shutil.copy2(src_file, dest_file)
+                content = _read_text(dest_file)
+                if content is None:
+                    continue
+                _write_text(dest_file, content_pattern.sub(content_replacer, content))
 
 
 def rename_flavors(root: Path) -> None:
