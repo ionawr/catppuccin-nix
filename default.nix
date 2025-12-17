@@ -59,8 +59,9 @@ in
       isCross = deriv.stdenv.buildPlatform != deriv.stdenv.targetPlatform;
       # Make sure we don't remove our functions
       isFunction = lib.isFunction deriv;
+      isDerivation = lib.isDerivation deriv;
     in
-    isFunction || (!broken) && availableOnHost || isCross
+    isFunction || (isDerivation && (!broken) && (availableOnHost || isCross))
   )) catppuccinPackages;
 
   shell = import ./shell.nix { inherit pkgs; };
