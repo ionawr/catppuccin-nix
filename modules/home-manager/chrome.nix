@@ -4,10 +4,8 @@ let
   cfg = config.catppuccin;
 
   identifiers = {
-    frappe = "olhelnoplefjdmncknfphenjclimckaf";
-    latte = "jhjnalhegpceacdhbplhnakmkdliaddd";
-    macchiato = "cmpdlhmnmjhihmcfnigoememnffkimlk";
-    mocha = "bkkmolkhemgaeaeggcmfbghljjjoofoh";
+    light = "jhjnalhegpceacdhbplhnakmkdliaddd";
+    dark = "bkkmolkhemgaeaeggcmfbghljjjoofoh";
   };
 
   # Google Chrome is not supported since it does not support extensions
