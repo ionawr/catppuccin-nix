@@ -6,7 +6,7 @@
   pnpm,
   pnpmConfigHook,
   fetchPnpmDeps,
-  catppuccinPaletteHook,
+  catppuccinPatchHook,
 
   catppuccinOptions ? { },
 }:
@@ -43,7 +43,7 @@ vscode-utils.buildVscodeExtension (finalAttrs: {
     nodejs
     pnpm
     pnpmConfigHook
-    catppuccinPaletteHook
+    catppuccinPatchHook
   ];
 
   __structuredAttrs = true;
