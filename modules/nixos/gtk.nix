@@ -33,12 +33,13 @@ in
             catppuccin.gtk.icon: papirus-folders does not support the "monochrome" accent, falling back to "blue"
           '';
 
-          services.displayManager.environment.XDG_DATA_DIRS = (
-            (lib.makeSearchPath "share" [
-              (pkgs.catppuccin-papirus-folders.override { inherit accent; inherit (cfg.icon) flavor; })
+          services.displayManager.environment.XDG_DATA_DIRS =
+          let
+            originalFlavor = if cfg.icon.flavor == "light" then "latte" else "mocha";
+          in (lib.makeSearchPath "share" [
+              (pkgs.catppuccin-papirus-folders.override { inherit accent; flavor = originalFlavor; })
             ])
-            + ":"
-          );
+            + ":";
 
           programs.dconf.profiles.gdm.databases = [
             {

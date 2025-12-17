@@ -66,10 +66,11 @@ in
       let
         polarity = if cfg.icon.flavor == "light" then "Light" else "Dark";
         accent = if cfg.icon.accent == "monochrome" then "blue" else cfg.icon.accent;
+        originalFlavor = if cfg.icon.flavor == "light" then "latte" else "mocha";
       in
       {
         name = "Papirus-${polarity}";
-        package = pkgs.catppuccin-papirus-folders.override { inherit accent; inherit (cfg.icon) flavor; };
+        package = pkgs.catppuccin-papirus-folders.override { inherit accent; flavor = originalFlavor; };
       };
   };
 }
