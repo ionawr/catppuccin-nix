@@ -1,4 +1,4 @@
-{ catppuccinModules }:
+{ catppuccinModules, palette }:
 {
   config,
   lib,
@@ -33,7 +33,7 @@ in
 
     sources =
       let
-        defaultSources = (import ../default.nix { inherit pkgs; }).packages;
+        defaultSources = (import ../default.nix { inherit pkgs palette; }).packages;
       in
       lib.mkOption {
         type = lib.types.lazyAttrsOf lib.types.raw;
