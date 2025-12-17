@@ -14,7 +14,10 @@
 buildCatppuccinPort (finalAttrs: {
   port = "cursors";
 
-  postPatch = "patchShebangs scripts/ build";
+  postPatch = ''
+    chmod +x build
+    patchShebangs scripts/ build
+  '';
 
   nativeBuildInputs = [
     (python3.withPackages (p: [ p.pyside6 ]))
