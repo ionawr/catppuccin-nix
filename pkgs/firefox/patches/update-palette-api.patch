@@ -1,0 +1,34 @@
+--- a/main.js
++++ b/main.js
+@@ -1,5 +1,5 @@
+ import JsonUrl from "json-url";
+-import { variants } from "@catppuccin/palette";
++import { flavors } from "@catppuccin/palette";
+ import { writeFileSync } from "node:fs";
+
+ const accents = [
+@@ -16,6 +16,7 @@ const accents = [
+     "sapphire",
+     "blue",
+     "lavender",
++    "monochrome",
+ ];
+
+ const jsonCodec = JsonUrl("lzma");
+@@ -40,12 +41,13 @@ const capitalize = (s) => {
+ (async () => {
+     let themes = {};
+
+-    for (const flavour of Object.keys(variants)) {
++    for (const flavour of Object.keys(flavors)) {
+         console.log(`<details>\n<summary>${capitalize(flavour)}</summary>\n`);
+         const lib = {};
+
+-        Object.keys(variants[flavour]).forEach((colour) => {
+-            const hex = variants[flavour][colour]["hex"];
++        Object.keys(flavors[flavour].colors).forEach((colour) => {
++            const color = flavors[flavour].colors[colour];
++            const hex = color.hex;
+             const { r, g, b } = hexToRgb(hex);
+             lib[colour] = {
+                 r,
