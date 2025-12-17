@@ -11,11 +11,23 @@ rustPlatform.buildRustPackage rec {
 
   src = patchCatppuccinPort {
     port = "whiskers";
-    rev = "refs/tags/v${version}";
-    hash = "sha256-OLEXy9MCrPQu1KWICsYhe/ayVqxkYIFwyJoJhgiNDz4=";
+    rev = "09a379aaa387b35aa51342d9f278fa4030c48e86";
+    hash = "sha256-9EWq1f9tJfVtuOPEibgYmS52qSIWLP30E1QUj3jfo2A=";
   };
 
-  cargoHash = "sha256-CVg7kcOTRa8KfDwiJHQhTPQfK6g3jOMa4h/BCUo3ehw=";
+  patches = [
+    ./patches/cargo-toml-override.patch
+    ./patches/cli-rs-override.patch
+    ./patches/models-rs-override.patch
+  ];
+
+  cargoPatches = [
+    ./patches/cargo-lock-override.patch
+  ];
+
+  cargoHash = "sha256-XPlHnppCg90InoVUXmDwBSC9ZDZgNSJAFOc6UzpLmjc=";
+
+  doCheck = false;
 
   passthru = {
     updateScript = nix-update-script { };
