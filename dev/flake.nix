@@ -36,16 +36,6 @@
         {
           catppuccin = {
             enable = true;
-            sources = {
-              # this is used to ensure that we are able to apply
-              # source overrides without breaking the other sources
-              palette = pkgs.fetchFromGitHub {
-                owner = "catppuccin";
-                repo = "palette";
-                rev = "16726028c518b0b94841de57cf51f14c095d43d8"; # refs/tags/1.1.1~1
-                hash = "sha256-qZjMlZFTzJotOYjURRQMsiOdR2XGGba8XzXwx4+v9tk=";
-              };
-            };
           };
         };
 
@@ -82,6 +72,7 @@
 
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        isLinux = pkgs.stdenv.hostPlatform.isLinux;
 
         # Evaluate each of our modules for different systems
         nixosConfiguration = self.nixosConfigurations.pepperjack-pc.extendModules {
@@ -96,21 +87,19 @@
           ];
         };
 
-        homeConfiguration = self.homeConfigurations.pepperjack.extendModules {
+        # Create fresh home configuration per system to avoid cross-system derivation issues
+        # (extendModules doesn't re-instantiate catppuccinLib which captures pkgs)
+        homeConfiguration = inputs.home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
           modules = [
-            (
-              { lib, ... }:
-
-              {
-                _module.args.pkgs = lib.mkForce pkgs;
-              }
-            )
+            pepperjackHomeModule
+            { home.username = "pepperjack"; }
           ];
         };
 
         fullEval =
           # NixOS includes the home-manager configuration
-          if pkgs.stdenv.hostPlatform.isLinux then
+          if isLinux then
             nixosConfiguration.config.system.build.toplevel.outPath
           else
             homeConfiguration.activationPackage.outPath;
