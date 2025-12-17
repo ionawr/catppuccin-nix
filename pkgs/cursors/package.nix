@@ -65,7 +65,8 @@ buildCatppuccinPort (finalAttrs: {
   buildPhase = ''
     runHook preBuild
 
-    just all
+    just build light
+    just build dark
 
     runHook postBuild
   '';
