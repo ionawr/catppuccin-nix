@@ -15,7 +15,7 @@ buildCatppuccinPort (finalAttrs: {
   port = "cursors";
 
   postPatch = ''
-    chmod +x build
+    chmod +x build scripts/*
     patchShebangs scripts/ build
   '';
 
