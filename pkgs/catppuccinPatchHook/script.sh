@@ -36,5 +36,5 @@ catppuccinRustHook() {
   echo '{"files": {}, "package": null}' >"$crate_dir/.cargo-checksum.json"
 }
 
-postConfigureHooks+=(catppuccinPaletteHook)
+preBuildHooks+=(catppuccinPaletteHook)
 postPatchHooks+=(catppuccinRustHook)
