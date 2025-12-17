@@ -58,14 +58,18 @@ in
   };
 
   config = lib.mkIf cfg.icon.enable {
+    warnings = lib.optional (cfg.icon.accent == "monochrome") ''
+      catppuccin.gtk.icon: papirus-folders does not support the "monochrome" accent, falling back to "blue"
+    '';
+
     gtk.iconTheme =
       let
-        # use the light icon theme for latte
-        polarity = if cfg.icon.flavor == "latte" then "Light" else "Dark";
+        polarity = if cfg.icon.flavor == "light" then "Light" else "Dark";
+        accent = if cfg.icon.accent == "monochrome" then "blue" else cfg.icon.accent;
       in
       {
         name = "Papirus-${polarity}";
-        package = pkgs.catppuccin-papirus-folders.override { inherit (cfg.icon) accent flavor; };
+        package = pkgs.catppuccin-papirus-folders.override { inherit accent; inherit (cfg.icon) flavor; };
       };
   };
 }
