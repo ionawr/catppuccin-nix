@@ -57,11 +57,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1765533372,
-        "narHash": "sha256-gDz+wO2yX5713aE4rO0gvJKUvHwRS3O0aCNyBL+xSpI=",
+        "lastModified": 1765939295,
+        "narHash": "sha256-8VS2KXMbdJG7btxTm17ViwfxeaSYgUOILqix/f3Bkl4=",
         "owner": "kansedari",
         "repo": "catppuccin-palette",
-        "rev": "5f2e956a1526e7b34311fce3ecfe3d800276f96e",
+        "rev": "a413f412eb12ca068e07fb627efcad8bc9ee461c",
         "type": "github"
       },
       "original": {
