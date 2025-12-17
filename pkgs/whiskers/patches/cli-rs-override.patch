@@ -1,0 +1,34 @@
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -75,18 +75,14 @@
+
+ #[derive(Copy, Clone, Debug, clap::ValueEnum)]
+ pub enum Flavor {
+     Light,
+-    Frappe,
+-    Macchiato,
+     Dark,
+ }
+
+ impl From<Flavor> for catppuccin::FlavorName {
+     fn from(val: Flavor) -> Self {
+         match val {
+             Flavor::Light => Self::Light,
+-            Flavor::Frappe => Self::Frappe,
+-            Flavor::Macchiato => Self::Macchiato,
+             Flavor::Dark => Self::Dark,
+         }
+     }
+@@ -96,13 +92,9 @@ pub struct ColorOverrides {
+     #[serde(default)]
+     pub all: HashMap<String, String>,
+     #[serde(default)]
+     pub light: HashMap<String, String>,
+     #[serde(default)]
+-    pub frappe: HashMap<String, String>,
+-    #[serde(default)]
+-    pub macchiato: HashMap<String, String>,
+-    #[serde(default)]
+     pub dark: HashMap<String, String>,
+ }
+

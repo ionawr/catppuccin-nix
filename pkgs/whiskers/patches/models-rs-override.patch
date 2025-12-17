@@ -1,0 +1,13 @@
+--- a/src/models.rs
++++ b/src/models.rs
+@@ -182,10 +182,8 @@
+         |color: &catppuccin::Color, flavor_name: catppuccin::FlavorName| -> Result<Color, Error> {
+             let flavor_override = color_overrides
+                 .map(|co| match flavor_name {
+                     catppuccin::FlavorName::Light => &co.light,
+-                    catppuccin::FlavorName::Frappe => &co.frappe,
+-                    catppuccin::FlavorName::Macchiato => &co.macchiato,
+                     catppuccin::FlavorName::Dark => &co.dark,
+                 })
+                 .and_then(|o| o.get(color.name.identifier()).cloned())
+                 .map(|s| color_from_hex_override(&s, color))
