@@ -1,5 +1,6 @@
 {
   buildCatppuccinPort,
+  catppuccinPatchHook,
   fetchYarnDeps,
   sources,
   yarnConfigHook,
@@ -10,7 +11,8 @@ buildCatppuccinPort {
   port = "firefox";
 
   patches = [
-    ./write-themes-to-json.patch
+    ./patches/write-themes-to-json.patch
+    ./patches/update-palette-api.patch
   ];
 
   yarnOfflineCache = fetchYarnDeps {
@@ -26,6 +28,7 @@ buildCatppuccinPort {
   '';
 
   nativeBuildInputs = [
+    catppuccinPatchHook
     yarnConfigHook
     yarnBuildHook
     nodejs
