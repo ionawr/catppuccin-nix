@@ -19,11 +19,14 @@ in
         (recolor.withConfig {
           config =
             let
-              polarity = if config.catppuccin.flavor == "latte" then "light" else "dark";
-              flavor = lib.toSentenceCase config.catppuccin.flavor;
+              polarity = config.catppuccin.flavor;
+              flavor = if config.catppuccin.flavor == "light" then "Latte" else "Mocha";
               version = builtins.splitVersion recolor.version;
+
+              originalTheme = builtins.readFile "${recolor}/share/anki/addons/recolor/themes/(${polarity}) Catppuccin ${flavor}.json";
+              patchedTheme = catppuccinLib.patchColors originalTheme;
             in
-            (lib.importJSON "${recolor}/share/anki/addons/recolor/themes/(${polarity}) Catppuccin ${flavor}.json")
+            (builtins.fromJSON patchedTheme)
             // {
               version = {
                 major = lib.toInt (builtins.elemAt version 0);
