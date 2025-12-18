@@ -304,4 +304,78 @@ lib.makeExtensible (ctp: {
     ```
   */
   applyToModules = map (flip importApply { catppuccinLib = ctp; });
+
+  /**
+    Patch the given string to use custom colour codes
+
+    # Example
+
+    ```nix
+    patchColors "#1e1e2e" => "#161616"
+    ```
+
+    # Type
+
+    ```
+    patchColors :: String -> String
+    ```
+
+    # Arguments
+
+    - str: String to patch
+    ```
+  */
+  patchColors =
+    str:
+      builtins.replaceStrings [
+        "CDD6F4" "cdd6f4" # Mocha text
+        "BAC2DE" "bac2de" # Mocha subtext1
+        "A6ADC8" "a6adc8" # Mocha subtext0
+        "9399B2" "9399b2" # Mocha overlay2
+        "7F849C" "7f849c" # Mocha overlay1
+        "6C7086" "6c7086" # Mocha overlay0
+        "585B70" "585b70" # Mocha surface2
+        "45475A" "45475a" # Mocha surface1
+        "313244" "313244" # Mocha surface0
+        "1E1E2E" "1e1e2e" # Mocha base
+        "181825" "181825" # Mocha mantle
+        "11111B" "11111b" # Mocha crust
+        "4C4F69" "4c4f69" # Latte text
+        "5C5F77" "5c5f77" # Latte subtext1
+        "6C6F85" "6c6f85" # Latte subtext0
+        "7C7F93" "7c7f93" # Latte overlay2
+        "8C8FA1" "8c8fa1" # Latte overlay1
+        "9CA0B0" "9ca0b0" # Latte overlay0
+        "ACB0BE" "acb0be" # Latte surface2
+        "BCC0CC" "bcc0cc" # Latte surface1
+        "CCD0DA" "ccd0da" # Latte surface0
+        "EFF1F5" "eff1f5" # Latte base
+        "E6E9EF" "e6e9ef" # Latte mantle
+        "DCE0E8" "dce0e8" # Latte crust
+      ] [
+        "F4F4F4" "f4f4f4"
+        "E0E0E0" "e0e0e0"
+        "C6C6C6" "c6c6c6"
+        "A8A8A8" "a8a8a8"
+        "8D8D8D" "8d8d8d"
+        "6F6F6F" "6f6f6f"
+        "525252" "525252"
+        "393939" "393939"
+        "262626" "262626"
+        "161616" "161616"
+        "0B0B0B" "0b0b0b"
+        "000000" "000000"
+        "0B0B0B" "0b0b0b"
+        "161616" "161616"
+        "262626" "262626"
+        "393939" "393939"
+        "525252" "525252"
+        "6F6F6F" "6f6f6f"
+        "8D8D8D" "8d8d8d"
+        "A8A8A8" "a8a8a8"
+        "C6C6C6" "c6c6c6"
+        "E8E8E8" "e8e8e8"
+        "E0E0E0" "e0e0e0"
+        "D8D8D8" "d8d8d8"
+      ] str;
 })
