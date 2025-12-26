@@ -11,8 +11,8 @@ buildCatppuccinPort {
   port = "firefox";
 
   patches = [
-    ./patches/write-themes-to-json.patch
-    ./patches/update-palette-api.patch
+    ./patches/0001-write-themes-to-json.patch
+    ./patches/0002-update-palette-api.patch
   ];
 
   yarnOfflineCache = fetchYarnDeps {

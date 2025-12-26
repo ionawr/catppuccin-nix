@@ -4,8 +4,7 @@
   nix-update-script,
   rustPlatform,
 }:
-
-rustPlatform.buildRustPackage rec {
+rustPlatform.buildRustPackage {
   pname = "whiskers";
   version = "2.5.1";
 
@@ -16,13 +15,13 @@ rustPlatform.buildRustPackage rec {
   };
 
   patches = [
-    ./patches/cargo-toml-override.patch
-    ./patches/cli-rs-override.patch
-    ./patches/models-rs-override.patch
+    ./patches/0001-cargo-toml-override.patch
+    ./patches/0002-cli-rs-override.patch
+    ./patches/0003-models-rs-override.patch
   ];
 
   cargoPatches = [
-    ./patches/cargo-lock-override.patch
+    ./patches/0001-cargo-lock-override.patch
   ];
 
   cargoHash = "sha256-XPlHnppCg90InoVUXmDwBSC9ZDZgNSJAFOc6UzpLmjc=";
@@ -30,7 +29,7 @@ rustPlatform.buildRustPackage rec {
   doCheck = false;
 
   passthru = {
-    updateScript = nix-update-script { };
+    updateScript = nix-update-script {};
   };
 
   meta = {
