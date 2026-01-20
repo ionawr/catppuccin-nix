@@ -3,7 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    palette.url = "github:kansedari/catppuccin-palette";
+    palette.url = "github:ionawr/catppuccin-palette";
   };
 
   outputs =
