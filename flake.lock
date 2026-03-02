@@ -71,11 +71,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1771997391,
-        "narHash": "sha256-c08vWm94zopUtBWwyfYS+6whDixLSPWLvutpkq6LItc=",
+        "lastModified": 1772469730,
+        "narHash": "sha256-Wrd7v2tglxfbYhsDIAqdufeM0Sga2Emca5/DL7rg7SM=",
         "owner": "ionawr",
         "repo": "catppuccin-palette",
-        "rev": "d1880371f7ae38598775772d2546acb936ea43ec",
+        "rev": "b0d6a3030f3d84637d945d3acf9b5e3a4490f63e",
         "type": "github"
       },
       "original": {
