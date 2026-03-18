@@ -12,10 +12,8 @@
 let
   dimensions = {
     flavor = [
-      "frappe"
-      "latte"
-      "macchiato"
-      "mocha"
+      "dark"
+      "light"
     ];
     accent = [
       "Blue"
