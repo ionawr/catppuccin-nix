@@ -4,9 +4,12 @@
   nix-update-script,
   rustPlatform,
 }:
-rustPlatform.buildRustPackage {
+let
   pname = "whiskers";
   version = "2.9.0";
+in
+rustPlatform.buildRustPackage {
+  inherit pname version;
 
   src = patchCatppuccinPort {
     port = "whiskers";
@@ -24,7 +27,7 @@ rustPlatform.buildRustPackage {
     ./patches/0001-cargo-lock-override.patch
   ];
 
-  cargoHash = "sha256-40IPDdxKTWYxsCfsECsXDGwfxXiTEIelxIGAFv3xlU4=";
+  cargoHash = "sha256-62U6YTO5Ohga/IXZB/lo43MF4twwhQG/uVG889vbD0Y=";
 
   doCheck = false;
 
