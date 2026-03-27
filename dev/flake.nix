@@ -71,7 +71,10 @@
       system:
 
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+          config.problems.handlers.nss_wrapper.broken = "warn";
+        };
         isLinux = pkgs.stdenv.hostPlatform.isLinux;
 
         # Evaluate each of our modules for different systems
