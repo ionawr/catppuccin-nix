@@ -8,7 +8,7 @@ import sys
 from dataclasses import dataclass
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Callable, Iterable, Sequence
+from typing import Callable, Iterator, Mapping, Sequence
 
 Replacement = tuple[str, str]
 
@@ -52,14 +52,6 @@ class Flavour:
     rosewater_hex: str
     monochrome_hex: str
 
-    @property
-    def name_cap(self) -> str:
-        return self.name.capitalize()
-
-    @property
-    def target_cap(self) -> str:
-        return self.target.capitalize()
-
 
 FLAVOURS: tuple[Flavour, ...] = (
     Flavour(name="mocha", target="dark", rosewater_hex="f5e0dc", monochrome_hex="f4f4f4"),
@@ -67,7 +59,44 @@ FLAVOURS: tuple[Flavour, ...] = (
 )
 
 
-def iter_files(root: Path) -> Iterable[Path]:
+@dataclass(frozen=True)
+class CaseReplacer:
+    pattern: re.Pattern
+    mapping: Mapping[str, str]
+
+    @classmethod
+    def compile(cls, replacements: Sequence[Replacement]) -> "CaseReplacer":
+        pattern = re.compile("|".join(re.escape(s) for s, _ in replacements), re.IGNORECASE)
+        return cls(pattern, {s.lower(): d for s, d in replacements})
+
+    def sub(self, text: str) -> str:
+        return self.pattern.sub(self._repl, text)
+
+    def search(self, text: str) -> bool:
+        return self.pattern.search(text) is not None
+
+    def _repl(self, m: re.Match) -> str:
+        matched = m.group(0)
+        dst = self.mapping[matched.lower()]
+
+        if matched.isupper():
+            return dst.upper()
+        if matched[:1].isupper():
+            return dst[:1].upper() + dst[1:]
+        return dst
+
+
+_SKIP_FILES: frozenset[str] = frozenset({
+    "cargo.toml",
+    "cargo.lock",
+    "package.json",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "yarn.lock",
+})
+
+
+def iter_files(root: Path) -> Iterator[Path]:
     for path in root.rglob("*"):
         if path.is_file():
             yield path
@@ -81,80 +110,46 @@ def _read_text(path: Path) -> str | None:
 
 
 def _write_text(path: Path, content: str) -> None:
-    try:
-        path.write_text(content, encoding="utf-8")
-    except OSError:
-        return
-
-
-def _case_preserving_replace(match: re.Match, mapping: dict[str, str]) -> str:
-    matched = match.group(0)
-    replacement = mapping[matched.lower()]
-
-    if matched.isupper():
-        return replacement.upper()
-    if matched[:1].isupper():
-        return replacement[:1].upper() + replacement[1:]
-    return replacement
+    path.write_text(content, encoding="utf-8")
 
 
 def _should_skip_file(file_path: Path) -> bool:
-    name = file_path.name.lower()
-    return "package" in name or "Cargo" in name or "lock" in name
+    return file_path.name.lower() in _SKIP_FILES
 
 
 def replace_in_files(root: Path, replacements: Sequence[Replacement]) -> None:
     if not replacements:
         return
-
-    pattern = re.compile("|".join(re.escape(src) for src, _ in replacements), re.IGNORECASE)
-    mapping = {src.lower(): dst for src, dst in replacements}
-
-    for file_path in iter_files(root):
-        if _should_skip_file(file_path):
-            continue
-
-        content = _read_text(file_path)
-        if content is None or not pattern.search(content):
-            continue
-
-        new_content = pattern.sub(lambda m: _case_preserving_replace(m, mapping), content)
-        _write_text(file_path, new_content)
+    _patch_tree_text(root, CaseReplacer.compile(replacements))
 
 
 def _rename_matching(
     root: Path,
     *,
     predicate: Callable[[Path], bool],
-    from_str: str,
-    to_str: str,
+    replacer: CaseReplacer,
 ) -> None:
-    pattern = re.compile(re.escape(from_str), re.IGNORECASE)
-
     candidates: list[Path] = [
         p for p in root.rglob("*")
-        if predicate(p) and pattern.search(p.name)
+        if predicate(p) and replacer.search(p.name)
     ]
 
     # avoid renaming parent before its children
     candidates.sort(key=lambda p: len(p.parts), reverse=True)
 
     for path in candidates:
-        new_path = path.with_name(pattern.sub(to_str, path.name))
+        new_path = path.with_name(replacer.sub(path.name))
         if new_path.exists():
             continue
-        try:
-            path.rename(new_path)
-        except OSError:
-            continue
+        path.rename(new_path)
 
 
-def rename_dirs(root: Path, *, from_str: str, to_str: str) -> None:
-    _rename_matching(root, predicate=Path.is_dir, from_str=from_str, to_str=to_str)
+def rename_dirs(root: Path, *, replacer: CaseReplacer) -> None:
+    _rename_matching(root, predicate=Path.is_dir, replacer=replacer)
 
 
-def rename_files(root: Path, *, from_str: str, to_str: str) -> None:
-    _rename_matching(root, predicate=Path.is_file, from_str=from_str, to_str=to_str)
+def rename_files(root: Path, *, replacer: CaseReplacer) -> None:
+    _rename_matching(root, predicate=Path.is_file, replacer=replacer)
 
 
 def remove_items(root: Path, patterns: Sequence[str]) -> None:
@@ -173,138 +168,98 @@ def remove_items(root: Path, patterns: Sequence[str]) -> None:
     candidates.sort(key=lambda p: len(p.parts), reverse=True)
 
     for path in candidates:
-        try:
-            if path.is_dir():
-                shutil.rmtree(path, ignore_errors=True)
-            else:
-                path.unlink(missing_ok=True)
-        except OSError:
-            continue
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=True)
+        else:
+            path.unlink(missing_ok=True)
 
 
-def _rosewater_to_monochrome_pattern(flavor: Flavour) -> re.Pattern:
-    return re.compile(
-        rf"{re.escape(flavor.rosewater_hex)}|rosewater|Rosewater",
-        re.IGNORECASE,
-    )
-
-
-def _rosewater_to_monochrome_replacer(flavor: Flavour) -> Callable[[re.Match], str]:
-    def repl(match: re.Match) -> str:
-        token = match.group(0)
-        if token.lower() == flavor.rosewater_hex.lower():
-            return flavor.monochrome_hex
-        if token == "Rosewater":
-            return "Monochrome"
-        if token.lower() == "rosewater":
-            return "monochrome"
-        return token  # should be unreachable
-
-    return repl
-
-
-def _patch_tree_text(root: Path, pattern: re.Pattern, repl: Callable[[re.Match], str]) -> None:
+def _patch_tree_text(root: Path, replacer: CaseReplacer) -> None:
     for file_path in iter_files(root):
         if _should_skip_file(file_path):
             continue
         content = _read_text(file_path)
-        if content is None or not pattern.search(content):
+        if content is None or not replacer.search(content):
             continue
-        _write_text(file_path, pattern.sub(repl, content))
+        _write_text(file_path, replacer.sub(content))
+
+
+def _rosewater_replacer(flavour: Flavour) -> CaseReplacer:
+    return CaseReplacer.compile([
+        (flavour.rosewater_hex, flavour.monochrome_hex),
+        ("rosewater", "monochrome"),
+    ])
 
 
 def create_monochrome_variants(root: Path) -> None:
-    for flavor in FLAVOURS:
-        content_pattern = _rosewater_to_monochrome_pattern(flavor)
-        content_replacer = _rosewater_to_monochrome_replacer(flavor)
-
-        # ...-{flavor}-rosewater -> ...-{flavor}-monochrome
-        dir_suffix = re.compile(rf"-{re.escape(flavor.name)}-rosewater$", re.IGNORECASE)
-        for src_dir in list(root.rglob(f"*-{flavor.name}-rosewater")):
-            if not src_dir.is_dir():
-                continue
-
-            dest_dir = src_dir.with_name(
-                dir_suffix.sub(f"-{flavor.name}-monochrome", src_dir.name)
-            )
-            if dest_dir.exists():
-                continue
-
-            shutil.copytree(src_dir, dest_dir)
-
-            # rosewater -> monochrome
-            for file_path in list(dest_dir.rglob("*rosewater*")):
-                if file_path.is_file():
-                    file_path.rename(
-                        file_path.with_name(file_path.name.replace("rosewater", "monochrome"))
-                    )
-
-            _patch_tree_text(dest_dir, content_pattern, content_replacer)
-
-        # *-{flavor}-rosewater.* -> *-{flavor}-monochrome.*
-        file_name_re = re.compile(
-            rf"^(.*-{re.escape(flavor.name)})-rosewater(\..+)$", re.IGNORECASE
-        )
-        for src_file in list(root.rglob(f"*-{flavor.name}-rosewater.*")):
-            if not src_file.is_file():
-                continue
-
-            m = file_name_re.match(src_file.name)
-            if not m:
-                continue
-
-            dest_file = src_file.with_name(f"{m.group(1)}-monochrome{m.group(2)}")
-            if dest_file.exists():
-                continue
-
-            shutil.copy2(src_file, dest_file)
-
-            content = _read_text(dest_file)
-            if content is None:
-                continue
-            _write_text(dest_file, content_pattern.sub(content_replacer, content))
-
-        # {flavor}/rosewater.* -> {flavor}/monochrome.*
-        for flavor_dir in root.rglob(flavor.name):
-            if not flavor_dir.is_dir():
-                continue
-            for src_file in list(flavor_dir.glob("rosewater.*")):
-                if not src_file.is_file():
-                    continue
-                dest_file = src_file.with_name(src_file.name.replace("rosewater", "monochrome"))
-                if dest_file.exists():
-                    continue
-                shutil.copy2(src_file, dest_file)
-                content = _read_text(dest_file)
-                if content is None:
-                    continue
-                _write_text(dest_file, content_pattern.sub(content_replacer, content))
+    for flavour in FLAVOURS:
+        _create_variants_for(root, flavour)
 
 
-def rename_flavors(root: Path) -> None:
-    for flavor in FLAVOURS:
-        rename_dirs(root, from_str=flavor.name, to_str=flavor.target)
-        rename_files(root, from_str=flavor.name, to_str=flavor.target)
+def _create_variants_for(root: Path, flavour: Flavour) -> None:
+    replacer = _rosewater_replacer(flavour)
+    name = re.escape(flavour.name)
 
-        pattern = re.compile(re.escape(flavor.name), re.IGNORECASE)
+    suffix_dir_re = re.compile(rf"-{name}-rosewater$", re.IGNORECASE)
+    suffix_file_re = re.compile(rf"^(.*-{name})-rosewater(\..+)$", re.IGNORECASE)
 
-        def repl(match: re.Match) -> str:
-            token = match.group(0)
+    variant_dirs: list[Path] = []
+    variant_files: list[tuple[Path, re.Match]] = []
+    inner_files: list[Path] = []
 
-            # preserve casing
-            if token == flavor.name_cap:
-                return flavor.target_cap
-            if token == flavor.name:
-                return flavor.target
-            if token.lower() == flavor.name:
-                return flavor.target.upper() if token.isupper() else flavor.target
-            return token
+    for path in root.rglob("*"):
+        if path.is_dir():
+            if suffix_dir_re.search(path.name):
+                variant_dirs.append(path)
+        elif (m := suffix_file_re.match(path.name)):
+            variant_files.append((path, m))
+        elif (
+            path.name.lower().startswith("rosewater.")
+            and path.parent.name.lower() == flavour.name
+        ):
+            inner_files.append(path)
 
-        _patch_tree_text(root, pattern, repl)
+    # ...-{flavour}-rosewater -> ...-{flavour}-monochrome
+    for src in variant_dirs:
+        dst = src.with_name(suffix_dir_re.sub(f"-{flavour.name}-monochrome", src.name))
+        if dst.exists():
+            continue
+        shutil.copytree(src, dst)
+        for inner in list(dst.rglob("*rosewater*")):
+            if inner.is_file():
+                inner.rename(inner.with_name(inner.name.replace("rosewater", "monochrome")))
+        _patch_tree_text(dst, replacer)
+
+    # *-{flavour}-rosewater.* -> *-{flavour}-monochrome.*
+    for src, m in variant_files:
+        dst = src.with_name(f"{m.group(1)}-monochrome{m.group(2)}")
+        if not dst.exists():
+            _copy_and_patch(src, dst, replacer)
+
+    # {flavour}/rosewater.* -> {flavour}/monochrome.*
+    for src in inner_files:
+        dst = src.with_name(src.name.replace("rosewater", "monochrome"))
+        if not dst.exists():
+            _copy_and_patch(src, dst, replacer)
+
+
+def _copy_and_patch(src: Path, dst: Path, replacer: CaseReplacer) -> None:
+    shutil.copy2(src, dst)
+    content = _read_text(dst)
+    if content is not None:
+        _write_text(dst, replacer.sub(content))
+
+
+def rename_flavours(root: Path) -> None:
+    for flavour in FLAVOURS:
+        replacer = CaseReplacer.compile([(flavour.name, flavour.target)])
+        rename_dirs(root, replacer=replacer)
+        rename_files(root, replacer=replacer)
+        _patch_tree_text(root, replacer)
+
 
 def inject_palette_to_js_ports(root: Path, palette_path: Path) -> None:
     def _has_palette_dependency(root: Path) -> bool:
-        """Check if any lock file references @catppuccin/palette."""
         for lock_file in ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"]:
             lock_path = root / lock_file
             if lock_path.exists():
@@ -317,14 +272,8 @@ def inject_palette_to_js_ports(root: Path, palette_path: Path) -> None:
         return
 
     # copy palette to source (will be used by catppuccinPatchHook after npm install)
-    dest = root / ".catppuccin-palette"
-    shutil.copytree(palette_path, dest)
-
-
-def inject_crate_to_rust_ports(root: Path, crate_path: Path) -> None:
-    # Rust crate replacement is handled by catppuccinPatchHook at build time.
-    # This function is kept for potential future use but currently does nothing.
-    pass
+    dst = root / ".catppuccin-palette"
+    shutil.copytree(palette_path, dst)
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -333,7 +282,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("out_dir", type=Path, help="Output directory to patch")
     parser.add_argument("--palette", type=Path, help="Path to custom palette npm package")
-    parser.add_argument("--rust-crate", type=Path, help="Path to custom catppuccin Rust crate")
 
     return parser.parse_args(argv)
 
@@ -346,18 +294,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Error: Output directory does not exist: {out_dir}", file=sys.stderr)
         return 1
 
-    replacements: list[Replacement] = list(MOCHA_REPLACEMENTS) + list(LATTE_REPLACEMENTS)
-
-    replace_in_files(out_dir, replacements)
-    create_monochrome_variants(out_dir)
-    rename_flavors(out_dir)
     remove_items(out_dir, ["*frappe*", "*macchiato*"])
+    replace_in_files(out_dir, MOCHA_REPLACEMENTS + LATTE_REPLACEMENTS)
+    create_monochrome_variants(out_dir)
+    rename_flavours(out_dir)
 
     if args.palette:
         inject_palette_to_js_ports(out_dir, args.palette)
-
-    if args.rust_crate:
-        inject_crate_to_rust_ports(out_dir, args.rust_crate)
 
     return 0
 
