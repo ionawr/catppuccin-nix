@@ -5,12 +5,16 @@
   paletteNpm,
 }: {
   port,
-  rev,
+  rev ? null,
+  tag ? null,
   hash,
   ...
-} @ args: let
+} @ args:
+assert lib.assertMsg (rev != null || tag != null)
+  "patchCatppuccinPort: port `${port}` must specify at least one of `rev` or `tag`";
+let
   removeArgs = ["port"];
-  pristine = fetchCatppuccinPort {inherit port rev hash;} // lib.removeAttrs args removeArgs;
+  pristine = fetchCatppuccinPort {inherit port rev tag hash;} // lib.removeAttrs args removeArgs;
 
   patchScript = ./patch.py;
   skipPatch = [];
@@ -22,7 +26,7 @@ in
       pkgs.runCommandLocal "catppuccin-${port}-patched" {
         src = pristine;
         nativeBuildInputs = [pkgs.python3];
-        passthru = {inherit rev paletteNpm;};
+        passthru = {inherit rev tag paletteNpm;};
       } ''
         cp -r --no-preserve=mode --dereference "$src/." "$out"
 
