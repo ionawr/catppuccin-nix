@@ -56,7 +56,8 @@ let
           cp ${palette.packages.${pkgs.stdenv.hostPlatform.system}.json} $out/palette.json
         '';
       };
-    };
+    }
+  );
 in
 
 {
