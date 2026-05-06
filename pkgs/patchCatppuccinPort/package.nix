@@ -7,6 +7,7 @@
   port,
   rev ? null,
   tag ? null,
+  lastModified ? null,
   hash,
   ...
 } @ args:
@@ -26,7 +27,8 @@ in
       pkgs.runCommandLocal "catppuccin-${port}-patched" {
         src = pristine;
         nativeBuildInputs = [pkgs.python3];
-        passthru = {inherit rev tag paletteNpm;};
+        passthru = {inherit rev tag paletteNpm;}
+        // lib.optionalAttrs (lastModified != null) {inherit lastModified;};
       } ''
         cp -r --no-preserve=mode --dereference "$src/." "$out"
 
