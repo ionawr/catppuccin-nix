@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.xz";
     palette = {
-      url = "github:kansedari/catppuccin-palette";
+      url = "github:ionawr/catppuccin-palette";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
